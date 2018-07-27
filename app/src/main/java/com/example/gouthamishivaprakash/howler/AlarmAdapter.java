@@ -1,26 +1,45 @@
 package com.example.gouthamishivaprakash.howler;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.example.gouthamishivaprakash.howler.model.Alarms;
+
 import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
+
+import static io.realm.internal.SyncObjectServerFacade.getApplicationContext;
 
 public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<Alarms> mData;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private Realm realm;
+    private RealmResults<Alarms> results;
+    private AlarmManager alarmManager;
+    private int requestCode;
+    private String setTime;
+    private onClickTrashIconListener mOnClickTrashIconListener;
 
     // data is passed into the constructor
-    AlarmAdapter(Context context, List<String> data) {
+    AlarmAdapter(Context context, RealmResults<Alarms> data, Realm realm) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.results = data;
+        this.realm = realm;
+        mData = realm.copyFromRealm(results);
     }
 
     // inflates the row layout from xml when needed
@@ -32,16 +51,19 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
 
     // binds the data to the CardView in each row
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        final String alarm = mData.get(position);
+        final String alarm = mData.get(position).getAlarmTime();
         holder.myTextView.setText(alarm);
-        holder.deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mData.remove(position);
-                notifyItemRemoved(position);
-                notifyItemRangeChanged(position,mData.size());
-            }
-        });
+    }
+
+    public void updateAdapter(Alarms alarm) {
+        mData.add(alarm);
+        notifyDataSetChanged();
+    }
+
+    public void deleteAlarm(int position, String setTime) {
+        mOnClickTrashIconListener.cancelPendingIntent(setTime);
+        mData.remove(position);
+        notifyDataSetChanged();
     }
 
     // total number of rows
@@ -60,18 +82,17 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
             super(itemView);
             myTextView = itemView.findViewById(R.id.alarmTime);
             deleteButton = itemView.findViewById(R.id.delbut);
-            itemView.setOnClickListener(this);
+            deleteButton.setOnClickListener(view -> {
+                int iD = getAdapterPosition();
+                String time = myTextView.getText().toString();
+                deleteAlarm(iD, time);
+            });
         }
 
         @Override
         public void onClick(View view) {
             if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
         }
-    }
-
-    // convenience method for getting data at click position
-    String getItem(int id) {
-        return mData.get(id);
     }
 
     // allows clicks events to be caught
@@ -84,5 +105,12 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
         void onItemClick(View view, int position);
     }
 
+    public interface onClickTrashIconListener {
+        void cancelPendingIntent(String time);
+    }
+
+    public void setOnClickTrashIconListener(onClickTrashIconListener mOnClickTrashIconListener) {
+        this.mOnClickTrashIconListener = mOnClickTrashIconListener;
+    }
 
 }

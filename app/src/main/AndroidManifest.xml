@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.gouthamishivaprakash.howler">
 
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+
     <application
+        android:name=".AlarmRealmInit"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -21,13 +24,9 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
-        <activity android:name=".SnoozeAlarmActivity"
-            android:showOnLockScreen="true">
-            <intent-filter>
-                <action android:name="android.intent.action.WAKE_LOCK" />
-            </intent-filter>
-        </activity>
-    </application>
+        <activity android:name=".SnoozeAlarmActivity" />
+        <activity android:name=".AwakeActivity"/>
 
+    </application>
 
 </manifest>
