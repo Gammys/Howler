@@ -1,6 +1,5 @@
 package com.example.gouthamishivaprakash.howler;
 
-
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
@@ -134,7 +133,6 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
             //set up alarmManager to fire the alarm
             alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
             Calendar calNow = Calendar.getInstance();
-            //Calendar calSet = (Calendar) calNow.clone();
             calSet = (Calendar) calNow.clone();
             calSet.set(Calendar.HOUR_OF_DAY, hour);
             calSet.set(Calendar.MINUTE, min);
@@ -145,7 +143,6 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, calSet.getTimeInMillis(), pendingIntent);
             Log.i("PendingIntent", "created");
 
-            //Toast.makeText(this, "Alarm set to the time specified", Toast.LENGTH_SHORT).show();
             Snackbar snackbar = Snackbar
                     .make(mRelativeLayout, "Alarm set to the time specified.", Snackbar.LENGTH_LONG);
             snackbar.show();
@@ -164,8 +161,11 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
 
     }
 
-    public void onBackPressed() {
-        finish();
+    public void onBackPressed(){
+        Intent homeActivity = new Intent(Intent.ACTION_MAIN);
+        homeActivity.addCategory(Intent.CATEGORY_HOME);
+        homeActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(homeActivity);
     }
 
 }
