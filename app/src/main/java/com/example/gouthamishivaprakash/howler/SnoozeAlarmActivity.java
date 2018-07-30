@@ -98,9 +98,10 @@ public class SnoozeAlarmActivity extends AppCompatActivity {
                 RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", setTime).findAll();
                 results.deleteAllFromRealm();
             });
-            Intent intent = new Intent(getApplicationContext(),AwakeActivity.class);
-            startActivity(intent);
             stopAlarm();
+            Intent startAwakeActivity = new Intent(this, AwakeActivity.class);
+            //To navigate back to the main activity.
+            TaskStackBuilder.create(this).addNextIntentWithParentStack(startAwakeActivity).startActivities();
         } else {
             //generate a new question if the user gives a wrong answer
             Toast.makeText(getApplicationContext(), "You get another chance to save yourself...", Toast.LENGTH_SHORT).show();

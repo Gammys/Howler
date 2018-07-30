@@ -25,7 +25,8 @@
             android:resource="@array/preloaded_fonts" />
 
         <activity android:name=".SnoozeAlarmActivity" />
-        <activity android:name=".AwakeActivity"/>
+        <activity android:name=".AwakeActivity"
+            android:parentActivityName=".DisplayAlarmMainActivity"/>
 
     </application>
 

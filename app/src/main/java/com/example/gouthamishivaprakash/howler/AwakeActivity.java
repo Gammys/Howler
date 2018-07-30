@@ -12,8 +12,4 @@ public class AwakeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_awake);
     }
 
-    public void onBackPressed() {
-        Intent intent = new Intent(getApplicationContext(), DisplayAlarmMainActivity.class);
-        startActivity(intent);
-    }
 }
