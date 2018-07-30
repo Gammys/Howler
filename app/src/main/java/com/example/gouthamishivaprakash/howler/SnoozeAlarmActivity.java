@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,8 +32,10 @@ public class SnoozeAlarmActivity extends AppCompatActivity {
     private Button checkButton;
     private Realm realm;
     private MediaPlayer mediaPlayer;
+    private AudioManager mAudioManager;
     private int num1;
     private int num2;
+    private int userVolume;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,20 +49,15 @@ public class SnoozeAlarmActivity extends AppCompatActivity {
         answer = findViewById(R.id.editTextAnswer);
         checkButton = findViewById(R.id.checkButton);
 
-        num1 = new Random().nextInt(100);
-        num2 = new Random().nextInt(100);
-        question.setText(Integer.toString(num1) + " + " + Integer.toString(num2));
+        //Generate Question
+        generateQuestion();
 
-        //MediaPlayer to play the alarm tone.
-        //The alarm tone is hard-coded and the mp3 file is stored in the raw folder.
-        mediaPlayer = MediaPlayer.create(this, R.raw.howl_tone);
-        mediaPlayer.start();
-        mediaPlayer.setLooping(true);
+        //Override silent mode and play the alarm tone
+        overrideSilentModeAndPlayAlarmTone();
 
         checkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //to make sure the user types an answer
                 checkAnswer();
             }
 
@@ -81,45 +79,88 @@ public class SnoozeAlarmActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
-    //app stays on the same activity when back button is pressed
-    public void onBackPressed() {
-        Toast.makeText(getApplicationContext(), "You can't Escape!", Toast.LENGTH_SHORT).show();
+    private void generateQuestion(){
+        num1 = new Random().nextInt(100);
+        num2 = new Random().nextInt(100);
+        question.setText(Integer.toString(num1) + " + " + Integer.toString(num2));
+        answer.setText("");
+    }
+
+    private void checkAnswer() {
+        //to make sure the user types an answer
+        if (answer.getText().toString().length() == 0)
+            Toast.makeText(getApplicationContext(), "Type an Answer!", Toast.LENGTH_SHORT).show();
+        //to check if the entered answer is correct
+        else if (Integer.parseInt(answer.getText().toString()) == (num1 + num2)) {
+            //deleting time from the database
+            String setTime = getIntent().getStringExtra("Alarm time");
+            realm.executeTransaction(realm -> {
+                RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", setTime).findAll();
+                results.deleteAllFromRealm();
+            });
+            Intent intent = new Intent(getApplicationContext(),AwakeActivity.class);
+            startActivity(intent);
+            stopAlarm();
+        } else {
+            //generate a new question if the user gives a wrong answer
+            Toast.makeText(getApplicationContext(), "You get another chance to save yourself...", Toast.LENGTH_SHORT).show();
+            generateQuestion();
+        }
+    }
+
+    private void overrideSilentModeAndPlayAlarmTone(){
+        Log.i("Inside","AudioManager");
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        //remeber what the user's volume was set to before we change it.
+        userVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_ALARM);
+        //MediaPlayer to play the alarm tone.
+        //The alarm tone is hard-coded and the mp3 file is stored in the raw folder.
+        mediaPlayer = MediaPlayer.create(this, R.raw.howl_tone);
+        mediaPlayer.start();
+        mediaPlayer.setLooping(true);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), AudioManager.FLAG_PLAY_SOUND);
+    }
+
+    private void stopAlarm(){
+        //Reset the volume back to user's settings after stopping the alarm
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, userVolume, AudioManager.FLAG_PLAY_SOUND);
+        mediaPlayer.stop();
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch( event.getKeyCode() ) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                return true;
+            case KeyEvent.KEYCODE_BACK:
+                Toast.makeText(getApplicationContext(), "You can't Escape!", Toast.LENGTH_SHORT).show();
+                return true;
+            case KeyEvent.KEYCODE_POWER:
+                return  true;
+            default:
+                return super.dispatchKeyEvent(event);
+        }
+    }
+
+    //app stays on the same activity when back button is pressed
+    public void onBackPressed() {
+        Toast.makeText(getApplicationContext(), "You can't Escape!", Toast.LENGTH_SHORT).show();
+        Log.i("Toast", "After alarm dismissed");
+    }
+
+    @Override
+    //app is brought back to foreground when recent apps button is pressed
     protected void onPause() {
         super.onPause();
-        Toast.makeText(getApplicationContext(), "You can't Escape!", Toast.LENGTH_SHORT).show();
         ActivityManager activityManager = (ActivityManager) getApplicationContext()
                 .getSystemService(Context.ACTIVITY_SERVICE);
         activityManager.moveTaskToFront(getTaskId(), 0);
         Log.i("Inside", "onpause");
 
     }
-
-
-    private void checkAnswer() {
-        if (answer.getText().toString().length() == 0)
-            Toast.makeText(getApplicationContext(), "Type an Answer!", Toast.LENGTH_SHORT).show();
-            //to check if the entered answer is correct
-        else if (Integer.parseInt(answer.getText().toString()) == (num1 + num2)) {
-            //deleting time from the database
-            String setTime = getIntent().getStringExtra("Alarm time");
-            realm.executeTransaction(realm -> {
-                RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", setTime).findAll();
-                //requestCode = results.first().getRequestCode();
-                results.deleteAllFromRealm();
-            });
-            //DisplayAlarmMainActivity.stopAlarm();
-            Intent intent = new Intent(getApplicationContext(),AwakeActivity.class);
-            startActivity(intent);
-            mediaPlayer.stop();
-            //finish();
-
-        } else
-            Toast.makeText(getApplicationContext(), "One more chance to save yourself...", Toast.LENGTH_SHORT).show();
-    }
-
 
 }
 

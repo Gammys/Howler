@@ -3,12 +3,15 @@ package com.example.gouthamishivaprakash.howler;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,6 +20,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -31,6 +35,7 @@ import io.realm.RealmResults;
 public class DisplayAlarmMainActivity extends AppCompatActivity {
 
     private AlarmAdapter adapter;
+    private RelativeLayout mRelativeLayout;
     private FloatingActionButton add;
     private RecyclerView recyclerView;
     static PendingIntent pendingIntent;
@@ -50,6 +55,8 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_alarm_main);
+
+        mRelativeLayout = findViewById(R.id.relative_layout);
 
         //getting realm object to querry
         realm = Realm.getDefaultInstance();
@@ -105,46 +112,61 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
 
     //creates pending Intent and fires the alarm at specified time
     public void setAlarm(int hour, int min, String setTime) {
-        //Computing Primary key and Request code
-        PRIMARY_KEY = (Integer.parseInt(String.format("%02d", hour)+String.format("%02d", min)));
-        REQUEST_CODE = PRIMARY_KEY;
+        //Try catch block is used to avoid the user from creating two alarms of same time.
+        try {
+            //Computing Primary key and Request code
+            PRIMARY_KEY = (Integer.parseInt(String.format("%02d", hour) + String.format("%02d", min)));
+            REQUEST_CODE = PRIMARY_KEY;
 
-        //create pending intent
-        Intent alarmIntent = new Intent(getApplicationContext(), SnoozeAlarmActivity.class);
-        alarmIntent.putExtra("Alarm time", setTime);
-        pendingIntent = PendingIntent.getActivity(getApplicationContext(), REQUEST_CODE, alarmIntent, 0);
+            //create pending intent
+            Intent alarmIntent = new Intent(getApplicationContext(), SnoozeAlarmActivity.class);
+            alarmIntent.putExtra("Alarm time", setTime);
+            pendingIntent = PendingIntent.getActivity(getApplicationContext(), REQUEST_CODE, alarmIntent, 0);
 
-        //adding alarm to the database
-        realm.executeTransaction((Realm realm) -> {
-            alarm = realm.createObject(Alarms.class, PRIMARY_KEY);
-            alarm.setAlarmTime(setTime);
-            alarm.setRequestCode(REQUEST_CODE);
-        });
-        adapter.updateAdapter(alarm);
+            //adding alarm to the database
+            realm.executeTransaction((Realm realm) -> {
+                alarm = realm.createObject(Alarms.class, PRIMARY_KEY);
+                alarm.setAlarmTime(setTime);
+                alarm.setRequestCode(REQUEST_CODE);
+            });
+            adapter.updateAdapter(alarm);
 
-        //set up alarmManager to fire the alarm
-        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        Calendar calNow = Calendar.getInstance();
-        //Calendar calSet = (Calendar) calNow.clone();
-        calSet = (Calendar) calNow.clone();
-        calSet.set(Calendar.HOUR_OF_DAY, hour);
-        calSet.set(Calendar.MINUTE, min);
-        calSet.set(Calendar.SECOND, 0);
-        calSet.set(Calendar.MILLISECOND, 0);
-        if (calSet.compareTo(calNow) <= 0)
-            calSet.add(Calendar.DATE, 1);
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calSet.getTimeInMillis(), pendingIntent);
-        Log.i("PendingIntent","created");
+            //set up alarmManager to fire the alarm
+            alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            Calendar calNow = Calendar.getInstance();
+            //Calendar calSet = (Calendar) calNow.clone();
+            calSet = (Calendar) calNow.clone();
+            calSet.set(Calendar.HOUR_OF_DAY, hour);
+            calSet.set(Calendar.MINUTE, min);
+            calSet.set(Calendar.SECOND, 0);
+            calSet.set(Calendar.MILLISECOND, 0);
+            if (calSet.compareTo(calNow) <= 0)
+                calSet.add(Calendar.DATE, 1);
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calSet.getTimeInMillis(), pendingIntent);
+            Log.i("PendingIntent", "created");
 
-
-        Toast.makeText(this, "Alarm set to the time specified", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Alarm set to the time specified", Toast.LENGTH_SHORT).show();
+            Snackbar snackbar = Snackbar
+                    .make(mRelativeLayout, "Alarm set to the time specified.", Snackbar.LENGTH_LONG);
+            snackbar.show();
+        }catch (Exception e){
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Alarm already set!")
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    });
+            AlertDialog alert = builder.create();
+            alert.show();
+        }
 
     }
 
-//    public static void stopAlarm(){
-//        Log.i("InStopAlarm","Cancelling alarm");
-//        alarmManager.cancel(pendingIntent);
-//    }
+    public void onBackPressed() {
+        finish();
+    }
 
 }
 
