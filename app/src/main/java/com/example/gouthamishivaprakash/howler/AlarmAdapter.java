@@ -19,6 +19,7 @@ import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 import static io.realm.internal.SyncObjectServerFacade.getApplicationContext;
 
@@ -37,7 +38,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
     // data is passed into the constructor
     AlarmAdapter(Context context, RealmResults<Alarms> data, Realm realm) {
         this.mInflater = LayoutInflater.from(context);
-        this.results = data;
+        this.results = data.sort("id",Sort.ASCENDING);;
         this.realm = realm;
         mData = realm.copyFromRealm(results);
     }
@@ -56,7 +57,7 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
     }
 
     public void updateAdapter(Alarms alarm) {
-        mData.add(alarm);
+        mData.add(0,alarm);
         notifyDataSetChanged();
     }
 

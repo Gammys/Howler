@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
@@ -34,7 +35,7 @@ import io.realm.RealmResults;
 public class DisplayAlarmMainActivity extends AppCompatActivity {
 
     private AlarmAdapter adapter;
-    private RelativeLayout mRelativeLayout;
+    private CoordinatorLayout mCoordinatorLayout;
     private FloatingActionButton add;
     private RecyclerView recyclerView;
     static PendingIntent pendingIntent;
@@ -55,7 +56,7 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_alarm_main);
 
-        mRelativeLayout = findViewById(R.id.relative_layout);
+        mCoordinatorLayout = findViewById(R.id.coordinator_layout);
 
         //getting realm object to querry
         realm = Realm.getDefaultInstance();
@@ -144,7 +145,7 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
             Log.i("PendingIntent", "created");
 
             Snackbar snackbar = Snackbar
-                    .make(mRelativeLayout, "Alarm set to the time specified.", Snackbar.LENGTH_LONG);
+                    .make(mCoordinatorLayout, "Alarm set to the time specified.", Snackbar.LENGTH_LONG);
             snackbar.show();
         }catch (Exception e){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
