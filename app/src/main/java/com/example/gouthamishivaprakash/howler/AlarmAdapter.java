@@ -30,9 +30,6 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
     private ItemClickListener mClickListener;
     private Realm realm;
     private RealmResults<Alarms> results;
-    private AlarmManager alarmManager;
-    private int requestCode;
-    private String setTime;
     private onClickTrashIconListener mOnClickTrashIconListener;
 
     // data is passed into the constructor
@@ -56,23 +53,31 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
         holder.myTextView.setText(alarm);
     }
 
-    public void updateAdapter(Alarms alarm) {
-        mData.add(0,alarm);
-        notifyDataSetChanged();
-    }
-
-    public void deleteAlarm(int position, String setTime) {
-        mOnClickTrashIconListener.cancelPendingIntent(setTime);
-        mData.remove(position);
-        notifyDataSetChanged();
-    }
-
     // total number of rows
     @Override
     public int getItemCount() {
         return mData.size();
     }
 
+    // allows click events to be caught
+    void setClickListener(ItemClickListener itemClickListener) {
+        this.mClickListener = itemClickListener;
+    }
+
+    // parent activity will implement this method to respond to click events
+    public interface ItemClickListener {
+        void onItemClick(View view, int position);
+    }
+
+    //custom listener to delete alarm on delete icon clicked
+    public interface onClickTrashIconListener {
+        void cancelPendingIntent(String time);
+    }
+
+    //setter which allows the listener callbacks to be defined in the parent object
+    public void setOnClickTrashIconListener(onClickTrashIconListener mOnClickTrashIconListener) {
+        this.mOnClickTrashIconListener = mOnClickTrashIconListener;
+    }
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -96,22 +101,15 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.ViewHolder> 
         }
     }
 
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
-        this.mClickListener = itemClickListener;
+    public void updateAdapter(Alarms alarm) {
+        mData.add(0,alarm);
+        notifyDataSetChanged();
     }
 
-    // parent activity will implement this method to respond to click events
-    public interface ItemClickListener {
-        void onItemClick(View view, int position);
-    }
-
-    public interface onClickTrashIconListener {
-        void cancelPendingIntent(String time);
-    }
-
-    public void setOnClickTrashIconListener(onClickTrashIconListener mOnClickTrashIconListener) {
-        this.mOnClickTrashIconListener = mOnClickTrashIconListener;
+    public void deleteAlarm(int position, String setTime) {
+        mOnClickTrashIconListener.cancelPendingIntent(setTime);
+        mData.remove(position);
+        notifyDataSetChanged();
     }
 
 }

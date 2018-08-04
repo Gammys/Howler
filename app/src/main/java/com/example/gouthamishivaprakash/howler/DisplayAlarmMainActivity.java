@@ -20,6 +20,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.RelativeLayout;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -57,6 +59,7 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_display_alarm_main);
 
         mCoordinatorLayout = findViewById(R.id.coordinator_layout);
+        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         //getting realm object to querry
         realm = Realm.getDefaultInstance();
@@ -69,21 +72,43 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.list_alarms);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new AlarmAdapter(this, results, realm);
-        adapter.setOnClickTrashIconListener(setTime -> {
-            realm.executeTransaction(realm -> {
-                RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", setTime).findAll();
-                requestCode = results.first().getRequestCode();
-                results.deleteAllFromRealm();
-            });
-            Log.i("Alarm deleted", setTime);
-            Log.i("P.I. deleted", String.valueOf(requestCode));
-            Intent intent = new Intent(getApplicationContext(), SnoozeAlarmActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), requestCode, intent, 0);
-            alarmManager.cancel(mPendingIntent);
+
+        LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(this, R.anim.animate_timecard);
+        recyclerView.setLayoutAnimation(animation);
+
+        //delete the alarm when delete icon is clicked
+//        adapter.setOnClickTrashIconListener(setTime -> {
+//            realm.executeTransaction(realm -> {
+//                RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", setTime).findAll();
+//                requestCode = results.first().getRequestCode();
+//                results.deleteAllFromRealm();
+//            });
+//            Log.i("Alarm deleted", setTime);
+//            Log.i("P.I. deleted", String.valueOf(requestCode));
+//            Intent intent = new Intent(getApplicationContext(), SnoozeAlarmActivity.class);
+//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), requestCode, intent, 0);
+//            alarmManager.cancel(mPendingIntent);
+//        });
+
+        adapter.setOnClickTrashIconListener(new AlarmAdapter.onClickTrashIconListener() {
+            @Override
+            public void cancelPendingIntent(String time) {
+                realm.executeTransaction(realm -> {
+                    RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", time).findAll();
+                    requestCode = results.first().getRequestCode();
+                    results.deleteAllFromRealm();
+                    Log.i("Alarm deleted", time);
+                    Log.i("P.I. deleted", String.valueOf(requestCode));
+                    Intent intent = new Intent(getApplicationContext(), SnoozeAlarmActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), requestCode, intent, 0);
+                    alarmManager.cancel(mPendingIntent);
+                });
+            }
         });
+
         recyclerView.setAdapter(adapter);
-        alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
         //setting click listener for add alarm fab to set a new alarm
         add = findViewById(R.id.fabAddAlarm);
@@ -132,7 +157,6 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
             adapter.updateAdapter(alarm);
 
             //set up alarmManager to fire the alarm
-            alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
             Calendar calNow = Calendar.getInstance();
             calSet = (Calendar) calNow.clone();
             calSet.set(Calendar.HOUR_OF_DAY, hour);
