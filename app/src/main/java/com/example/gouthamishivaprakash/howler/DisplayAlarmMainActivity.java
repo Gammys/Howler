@@ -77,20 +77,6 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
         recyclerView.setLayoutAnimation(animation);
 
         //delete the alarm when delete icon is clicked
-//        adapter.setOnClickTrashIconListener(setTime -> {
-//            realm.executeTransaction(realm -> {
-//                RealmResults<Alarms> results = realm.where(Alarms.class).equalTo("alarmTime", setTime).findAll();
-//                requestCode = results.first().getRequestCode();
-//                results.deleteAllFromRealm();
-//            });
-//            Log.i("Alarm deleted", setTime);
-//            Log.i("P.I. deleted", String.valueOf(requestCode));
-//            Intent intent = new Intent(getApplicationContext(), SnoozeAlarmActivity.class);
-//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), requestCode, intent, 0);
-//            alarmManager.cancel(mPendingIntent);
-//        });
-
         adapter.setOnClickTrashIconListener(new AlarmAdapter.onClickTrashIconListener() {
             @Override
             public void cancelPendingIntent(String time) {
