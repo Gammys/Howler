@@ -3,6 +3,7 @@
     package="com.example.gouthamishivaprakash.howler">
 
     <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".AlarmRealmInit"
@@ -11,7 +12,9 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SplashActivity" android:theme="@style/SplashTheme">
+        <activity
+            android:name=".SplashActivity"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,11 +26,24 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
-        <activity android:name=".DisplayAlarmMainActivity" android:theme="@style/AppTheme"/>
+        <activity
+            android:name=".DisplayAlarmMainActivity"
+            android:theme="@style/AppTheme" />
         <activity android:name=".SnoozeAlarmActivity" />
-        <activity android:name=".AwakeActivity"
-            android:parentActivityName=".DisplayAlarmMainActivity"/>
+        <activity
+            android:name=".AwakeActivity"
+            android:parentActivityName=".DisplayAlarmMainActivity" />
 
+        <receiver
+            android:name=".BootCompleteReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".RestartAlarmsService" />
     </application>
 
 </manifest>

@@ -149,6 +149,9 @@ public class DisplayAlarmMainActivity extends AppCompatActivity {
             calSet.set(Calendar.MINUTE, min);
             calSet.set(Calendar.SECOND, 0);
             calSet.set(Calendar.MILLISECOND, 0);
+            if (calSet.before(Calendar.getInstance())) { // If time set is before the current time, set the alarm to the same time the next day
+                calSet.add(Calendar.DAY_OF_MONTH, 1);
+            }
             if (calSet.compareTo(calNow) <= 0)
                 calSet.add(Calendar.DATE, 1);
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, calSet.getTimeInMillis(), pendingIntent);
